@@ -102,13 +102,13 @@
             socket.on('new position', function (msg) {
                 userPos = JSON.parse(msg);
                 console.log(userPos, id);
-                $(`#${userPos.id}`).css('left', userPos.x);
-                $(`#${userPos.id}`).css('top', userPos.y);
+                    $(`#${userPos.id}`).css('left', userPos.x);
+                    $(`#${userPos.id}`).css('top', userPos.y);
             });
-
-            $(window).unload(function () {
+            
+            $("body").on('unload',() => {
                 socket.close();
-            });
+            })
 
             $("body").on('mousemove', (event) => {
                 $(`#${id}`).css('left', event.offsetX);
