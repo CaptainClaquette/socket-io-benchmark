@@ -14,17 +14,22 @@ io.on('connection', (socket) => {
     socket.on('chat message', (msg) => {
         console.log('message: ' + msg);
     });
-    socket.emit('your id',socket.id);
+    socket.emit('your id', socket.id);
     socket.on('chat message', (msg) => {
         io.emit('chat message', msg);
     });
-    socket.on('user move',(msg) => {
+    socket.on('user move', (msg) => {
         socket.broadcast.emit('new position', msg);
     });
+
+    socket.on('user size change', (msg) => {
+        socket.broadcast.emit('user size changed', msg);
+    });
+
     socket.broadcast.emit('new user', socket.id);
     socket.on('disconnect', (reason) => {
         console.log('disconnection');
-        socket.broadcast.emit('chat message',`user ${socket.id} disconnected`);
+        socket.broadcast.emit('chat message', `user ${socket.id} disconnected`);
     });
 });
 

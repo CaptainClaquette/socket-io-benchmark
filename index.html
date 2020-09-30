@@ -55,6 +55,7 @@
         .user {
             width: 40px;
             height: 40px;
+            border-radius: 40px;
             position: absolute;
         }
     </style>
@@ -95,25 +96,52 @@
             socket.on('new user', function (msg) {
                 $('body').append($(`<div id="${msg}" class="user">`).css('background-color', getRandomColor()));
             });
+
+            socket.on('user size changed', function (msg) {
+                let u = JSON.parse(msg)
+                $(`#${u.id}`).css("height", u.size + 'px');
+                $(`#${u.id}`).css("width", u.size + 'px');
+                $(`#${u.id}`).css("border-radius", u.size + 'px');
+                $(`#${u.id}`).css('left', u.x);
+                $(`#${u.id}`).css('top', u.y);
+            });
+
             socket.on('user count', function (msg) {
                 $('#messages').append($('<li>').text(`${msg} user connected`));
             });
 
             socket.on('new position', function (msg) {
                 userPos = JSON.parse(msg);
-                console.log(userPos, id);
-                    $(`#${userPos.id}`).css('left', userPos.x);
-                    $(`#${userPos.id}`).css('top', userPos.y);
+                $(`#${userPos.id}`).css('left', userPos.x);
+                $(`#${userPos.id}`).css('top', userPos.y);
             });
-            
-            $("body").on('unload',() => {
+
+            $("body").on('unload', () => {
                 socket.close();
             })
 
-            $("body").on('mousemove', (event) => {
-                $(`#${id}`).css('left', event.offsetX);
-                $(`#${id}`).css('top', event.offsetY);
-                socket.emit('user move', JSON.stringify({ id: id, x: event.offsetX, y: event.offsetY }));
+            $(document).on('mousemove', (event) => {
+                $(`#${id}`).css('left', event.pageX - $(`#${id}`).height() / 2);
+                $(`#${id}`).css('top', event.pageY - $(`#${id}`).height() / 2);
+                socket.emit('user move', JSON.stringify({ id: id, x: event.pageX - $(`#${id}`).height() / 2, y: event.pageY - $(`#${id}`).height() / 2 }));
+            });
+
+            $(document).bind('mousewheel', function (e) {
+                if (e.originalEvent.wheelDelta / 120 > 0) {
+                    $(`#${id}`).css("height", $(`#${id}`).height() + 1 + 'px');
+                    $(`#${id}`).css("width", $(`#${id}`).width() + 1 + 'px');
+                    $(`#${id}`).css("border-radius", $(`#${id}`).width() + 1 + 'px');
+                    $(`#${id}`).css('left', event.pageX - $(`#${id}`).height() / 2);
+                    $(`#${id}`).css('top', event.pageY - $(`#${id}`).height() / 2);
+                }
+                else {
+                    $(`#${id}`).css("height", $(`#${id}`).height() - 1 + 'px');
+                    $(`#${id}`).css("width", $(`#${id}`).width() - 1 + 'px');
+                    $(`#${id}`).css("border-radius", $(`#${id}`).width() - 1 + 'px');
+                    $(`#${id}`).css('left', event.pageX - $(`#${id}`).height() / 2);
+                    $(`#${id}`).css('top', event.pageY - $(`#${id}`).height() / 2);
+                }
+                socket.emit('user size change', JSON.stringify({ id: id, size: $(`#${id}`).height(), x: event.pageX - $(`#${id}`).height() / 2, y: event.pageY - $(`#${id}`).height() / 2 }));
             });
 
         });
