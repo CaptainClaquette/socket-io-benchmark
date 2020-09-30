@@ -90,7 +90,23 @@
 
             socket.on('your id', function (msg) {
                 id = msg;
-                $('body').append($(`<div id="${id}" class="user">`).css('background-color', getRandomColor()));
+                $('body').append($(`<div id="${id}" class="user" style="z-index:1000">`).css('background-color', getRandomColor()));
+                socket.emit('get users', '');
+            });
+
+            socket.on('users', function (msg) {
+                users = JSON.parse(msg);
+                users.forEach(user => {
+                    if (user.id != id) {
+                        $('body').append($(`<div id="${user.id}" class="user">`).css('background-color', getRandomColor()));
+                        $(`#${user.id}`).css("height", user.size + 'px');
+                        $(`#${user.id}`).css("width", user.size + 'px');
+                        $(`#${user.id}`).css("border-radius", user.size + 'px');
+                        $(`#${user.id}`).css('left', user.x);
+                        $(`#${user.id}`).css('top', user.y);
+                    }
+                });
+
             });
 
             socket.on('new user', function (msg) {
@@ -114,6 +130,12 @@
                 userPos = JSON.parse(msg);
                 $(`#${userPos.id}`).css('left', userPos.x);
                 $(`#${userPos.id}`).css('top', userPos.y);
+            });
+
+            socket.on('userDisconnect',(msg) => {
+                console.log(msg);
+                console.log($(`#${msg}`));
+                $(`#${msg}`).remove();
             });
 
             $("body").on('unload', () => {

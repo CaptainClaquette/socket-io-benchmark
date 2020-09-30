@@ -7,9 +7,11 @@ app.get('/', (req, res) => {
 });
 
 userCounter = 0;
+connectedUser = [];
 
 io.on('connection', (socket) => {
     userCounter++;
+    connectedUser.push({ id: socket.id, size: 40, x: 100, y: 100 });
     console.log('a user connected');
     socket.on('chat message', (msg) => {
         console.log('message: ' + msg);
@@ -18,18 +20,30 @@ io.on('connection', (socket) => {
     socket.on('chat message', (msg) => {
         io.emit('chat message', msg);
     });
+
+    socket.on('get users', () => {
+        socket.emit('users', JSON.stringify(connectedUser));
+    });
     socket.on('user move', (msg) => {
-        socket.broadcast.emit('new position', msg);
+        user = JSON.parse(msg);
+        let selectedUser = connectedUser.find(u => u.id === user.id);
+        selectedUser.x = user.x;
+        selectedUser.y = user.y;
+        socket.broadcast.emit('new position', JSON.stringify(selectedUser));
     });
 
     socket.on('user size change', (msg) => {
-        socket.broadcast.emit('user size changed', msg);
+        user = JSON.parse(msg);
+        let selectedUser = connectedUser.find(u => u.id === user.id);
+        selectedUser.size = user.size;
+        socket.broadcast.emit('user size changed', JSON.stringify(selectedUser));
     });
 
     socket.broadcast.emit('new user', socket.id);
     socket.on('disconnect', (reason) => {
         console.log('disconnection');
-        socket.broadcast.emit('chat message', `user ${socket.id} disconnected`);
+        connectedUser.splice(connectedUser.findIndex(u => u.id == socket.id), 1);
+        socket.broadcast.emit('userDisconnect', `${socket.id}`);
     });
 });
 
